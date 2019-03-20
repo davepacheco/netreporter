@@ -1,0 +1,7 @@
+[package]
+name = "netreporter"
+version = "0.1.0"
+authors = ["David Pacheco <dap@cs.brown.edu>"]
+
+[dependencies]
+pnet = "0.22.0"
