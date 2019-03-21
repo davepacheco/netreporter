@@ -18,6 +18,7 @@ use pnet::transport::TransportChannelType::Layer4;
 use pnet::transport::TransportProtocol::Ipv4;
 use pnet::transport::TransportReceiver;
 use pnet::transport::TransportSender;
+use pnet::transport::icmp_packet_iter;
 
 // Name of the program itself
 const NR_ARG0 : &'static str = "netreporter";
@@ -48,6 +49,8 @@ fn main()
             std::process::exit(1);
         }
     }
+
+    ping_recv_one(&mut icmp);
 }
 
 //
@@ -123,4 +126,23 @@ fn ping_send(icmp : &mut NrIcmpContext, target: IpAddr)
         Ok(_) => Ok(()),
         Err(error) => Err(format!("failed to send ICMP packet: {}", error))
     }
+}
+
+//
+// Listens for an ICMP receive packet and dumps information about it.
+// TODO should have a timeout, if we were to stick with this interface.
+//
+fn ping_recv_one(icmp : &mut NrIcmpContext)
+{
+    let mut iter = icmp_packet_iter(&mut icmp.nricmp_rx);
+    let (packet, addr) = match iter.next() {
+        Ok((packet, addr)) => (packet, addr),
+        Err(error) => {
+            // XXX shouldn't be printing here
+            eprintln!("{}: failed to read reply: {}", NR_ARG0, error);
+            return;
+        }
+    };
+
+    println!("ICMP reply from {}:\n{:?}", addr, packet);
 }
